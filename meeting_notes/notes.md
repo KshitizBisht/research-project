@@ -9,5 +9,5 @@
     - watch the videos provided
     - How ORC and spark do ACID transaction
     - Make repository
-    - Maintain notes
+    - Maintain notes/snippets
 - Target as of now is to implement ACID transaction on parquet/HBase.
