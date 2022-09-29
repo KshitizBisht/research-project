@@ -11,4 +11,3 @@
     - Make repository
     - Maintain notes
 - Target as of now is to implement ACID transaction on parquet/HBase.
-
