@@ -28,3 +28,14 @@
 ### Why acid transactions?
 - ensures data reliabbility and integrity
 - ensure data never falls into inconsistent state.
+
+### Data Lakes
+- central location that holds large amount of data in native, raw format.
+- uses flat arhitecture and object storage to store data.
+- stores data with metadata tags and unique identifier which makes it easier to locate and retreive data across regions.
+- Data warehouse stores data in files and folder.
+- data available to use is faster as it is kept in raw state.
+
+### Delta lake
+- brought ACID transactions to data lakes.
+
