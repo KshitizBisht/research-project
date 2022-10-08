@@ -67,6 +67,6 @@ Whether the DBMS requires that all updates made by a txn are reflected on non-vo
 - FORCE: Is required.
 - NO-FORCE: Is not required.
 
-### No steal + force
-- `rgb(9, 105, 218)` no undo of aborted txns required as no changes were commited to disk.
-- `rgb(9, 105, 218)` never redo changes of commited txn as all changea re guaranteed to be writted to disk at commit time. 
+### No steal + force (ASK)
+- <mark>Marked text</mark> no undo of aborted txns required as no changes were commited to disk.
+- never redo changes of commited txn as all changea re guaranteed to be writted to disk at commit time. 
