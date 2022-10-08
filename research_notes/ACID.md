@@ -1,4 +1,6 @@
-# ACID transaction
+# Transaction and concurrency control 
+
+## ACID transaction
 
 ### A (Atomicity) 
 - each statement in  a transaction (write, read, update and delete) treated as single unit. Either entire statement is executed or nothing (prevents data loss). 
@@ -39,3 +41,34 @@
 ### Delta lake
 - brought ACID transactions to data lakes.
 
+
+## Logging
+
+### Failure classification 
+- Transactional failure
+    - Logical failure : txn cannot be complete due to some internal error condditions (integrity constraint voliation)
+    - Internal state failure : DBMS must terminate an active transaction due to an error condition.
+- System failure
+    - Software failure : problem with OS or DBMS implementation (caugth zero exception).
+    - Hardware failure : computer hosting DBMS crashes (power failure). Fail-stop Assumption: Non-volatile storage contents are
+    assumed to not be corrupted by system crash.
+- Storage media failure
+    - Non-repairable hardware failure : A head crash or similar disk failure destroys all or part
+    of non-volatile storage. Destruction is assumed to be detectable (e.g., disk
+    controller use checksums to detect failures).
+
+### Steal policy
+Whether DBMS allows uncommited txn to overwrite the most recent commited value of an object in an non-volatile storage.
+- Steal : is allowed
+- No-steal : is not allowed
+
+### Force policy
+Whether the DBMS requires that all updates made by a txn are reflected on non-volatile storage before the txn can commit.
+- FORCE: Is required.
+- NO-FORCE: Is not required.
+
+### No steal + force
+<span style="color:red">
+- no undo of aborted txns required as no changes were commited to disk.
+- never redo changes of commited txn as all changea re guaranteed to be writted to disk at commit time. 
+</span>
