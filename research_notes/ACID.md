@@ -103,5 +103,5 @@ buffer policy : Steal + no-force
 
 ## Recovery
 - log record includes globally unique identifier, log sequence number (LSN)
-![Alt text](research_notes/lsn.png?raw=true "Title")
+![Alt text](./lsn.png?raw=true "Title")
 
