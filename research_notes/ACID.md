@@ -68,5 +68,40 @@ Whether the DBMS requires that all updates made by a txn are reflected on non-vo
 - NO-FORCE: Is not required.
 
 ### No steal + force (ASK)
-- <mark style="background-color: #FFFF00">Highlighted text</mark>   no undo of aborted txns required as no changes were commited to disk.
+- no undo of aborted txns required as no changes were commited to disk.
 - never redo changes of commited txn as all changea re guaranteed to be writted to disk at commit time. 
+
+### Shadow paging
+Maintain 2 serpate copies of the database
+- Master : contains changes from committed txns.
+- Shadow : temporary database with changes made fron uncommitted txns.
+txn only updates shadow pages and swtiches the shadow to become new master on commit
+
+buffer policy : No-steal + force
+
+### write ahead log
+- log file contains details about changes made to database.
+- DBMS must write to disk the log files records that corresponds to changes made to database object before it can flush that object to disk.
+
+buffer policy : Steal + no-force
+
+#### WAL protocol
+- <BEGIN> marks the starting of the txn
+- <COMMIT> marks the finish of the txn and DBMS makes sure that the results are flushed.
+- Log entry contains information about change to single object
+    - transaction id
+    - object id
+    - before value
+    - after value
+- Use group commit to batch multiple log flushes together to amortize overhead.
+- DBMS takes checkpoint to avoid reading entire log incase of failure.
+- <CHECKPOINT> to log and flush to stable storage.
+- txn committed before checkpoint is ignored.
+- txn commited after checkpoint need to redo
+- txn that did not commited after checkpoint (due to failure) needs to be undone.
+- checkpoiting too often can degrade the speed of DBMS.
+
+## Recovery
+- log record includes globally unique identifier, log sequence number (LSN)
+![Alt text](research_notes/lsn.png?raw=true "Title")
+
