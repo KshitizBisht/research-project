@@ -11,3 +11,18 @@
     - Make repository
     - Maintain notes/snippets
 - Target as of now is to implement ACID transaction on parquet/HBase.
+
+### 4 October 2022
+
+#### What I have done
+- Made a repo (containing notes about meeting and research)
+- Research about ACID transactions in videos (in progress)
+- Revised my big data concept
+- Not able to find anything useful about how the implementation is done rather doc shows how to use it
+- Took the paper about spark sql and parquet/orc
+
+#### Task
+- Check Andy publications
+- complete videos 
+- read papers.
+

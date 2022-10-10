@@ -1,6 +1,6 @@
 # Transaction and concurrency control 
 
-## ACID transaction
+## Concurrency control theory
 
 ### A (Atomicity) 
 - each statement in  a transaction (write, read, update and delete) treated as single unit. Either entire statement is executed or nothing (prevents data loss). 
@@ -22,7 +22,32 @@
         - pessimistic : dont let problem arise in first
         - optimistic  : deal with problem when it happens
     - #### Interleaving transactions
-        - 
+        - interleave txn to maximize concurrency
+
+- properties of schedules
+    - Serial schedule : does not interleave actions of different transactions
+    - Equivalent schedule : effect of executing the first schedule is identical to effect of executing second schedule.
+    - serializable schedule : a schedule that is euivalent to some serial execution of the transactions.
+- 2 operations conflict if : they are by same transactions, they areon the same object and at least of them is write.
+- interleave execution anomalies
+    - read-write conflicts
+    ![Alt text](./rw_conflict.png?raw=true "Title")
+    - write-read conflicts
+    ![Alt text](./wr_conflict.png?raw=true "Title")
+    - write-write conflicts
+    ![Alt text](./ww_conflict.png?raw=true "Title")
+
+- Different levels of serializability
+    - conflict serializability (most dbms try to supprt this) 
+    - view serializability (no dbms can do this)
+
+- dependancy graph
+    - one node per txn
+    - Edge from Ti to Tj if:
+        - An operation Oi of Ti conflicts with an operation Oj of Tj and
+        - Oi appears earlier in the schedule than Oj
+    - also known as precedence graph
+    - A schedule is conflict serializable iff its dependency graph is acyclic.
 
 ### D (Durability)
 - ensures that the history of transaction will be maintained even incase of system failure.
@@ -83,6 +108,8 @@ buffer policy : No-steal + force
 - log file contains details about changes made to database.
 - DBMS must write to disk the log files records that corresponds to changes made to database object before it can flush that object to disk.
 
+(q) if the database crashes after writing log files to disk before making changes to database then it starts from the last checkpoint right?
+
 buffer policy : Steal + no-force
 
 #### WAL protocol
@@ -105,3 +132,47 @@ buffer policy : Steal + no-force
 - log record includes globally unique identifier, log sequence number (LSN)
 ![Alt text](./lsn.png?raw=true "Title")
 
+- each data page contains pageLSN
+- system keeps track of flushed LSN.
+- Before page x can be written to disk, we must flush log at least to the point where: → pageLSNx ≤ flushedLSN
+- when the pageLSN in the buffer pool is greater than the flushedLSN it is safe to unpin or remove from pool because it has not been flushed to disk yet.
+- update pageLSN when txn modeifes record in a page.
+- update flushed LSN in memory everytime the DBMS writes out the buffer to disk.
+
+### transaction abort
+- prevLSN : previous LSN for the txn.
+- maintains a linked list for each txn that makes it easy to walk through its record.
+
+### Non-fuzzy checkpointing
+- DBMS halts everything when it takes a checkpoint to ensure a consistent snapshot. bad runtime performce but easy recovery.
+- (better approach) : pause txn that modifies database, prevent queries from acquiring write latch n table.
+
+### fuzzy checkpointing
+- DBMS allows active txn to continue the run while the system writes the logs record for the checkpoint.
+- ATT contains active txn started before checkpoint
+- DPT contains the dirty pages before checkpoint.
+
+## Recovery phases
+- Phase 1 : analysis
+    - Read WAL from the last masterrecord to identify dirty pages in the buffer pool and active txn at the time of the crash.
+- Phase 2 : Redo
+    - repeat all actions starting from an appropiate point in the log
+- Phase 3 : undo
+    - reverse the actions of txn that did not commit before the crash.
+
+### Analysis phase
+- scan log forward from last successful checkpoint.
+- if txn-end found remove its corresponding txn.
+- other records
+    - add txn to ATT with undo status.
+    - oncommit change status to commit.
+- for update record
+    - if page P not in DPT add P to DPT set its recLSN = LSN.
+- at the end of analysis phase.
+    - ATT identifies txns active at time of crash.
+    - DPT identifies which dirty page might not have made to disk.
+
+### Redo Phase
+- repeat the history to reconstruct state at the moment of the crash.
+- reapply all update (even aborted txn) and redo CLRS.
+-
