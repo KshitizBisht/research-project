@@ -1,5 +1,19 @@
 # Transaction and concurrency control 
 
+### Why acid transactions?
+- ensures data reliability and integrity
+- ensure data never falls into inconsistent state.
+
+### Data Lakes
+- central location that holds large amount of data in native, raw format.
+- uses flat arhitecture and object storage to store data.
+- stores data with metadata tags and unique identifier which makes it easier to locate and retreive data across regions.
+- Data warehouse stores data in files and folder.
+- data available to use is faster as it is kept in raw state.
+
+### Delta lake
+- brought ACID transactions to data lakes.
+
 ## Concurrency control theory
 
 ### A (Atomicity) 
@@ -31,14 +45,18 @@
 - 2 operations conflict if : they are by same transactions, they areon the same object and at least of them is write.
 - interleave execution anomalies
     - read-write conflicts
+
     ![Alt text](./rw_conflict.png?raw=true "Title")
     - write-read conflicts
+
     ![Alt text](./wr_conflict.png?raw=true "Title")
     - write-write conflicts
+
     ![Alt text](./ww_conflict.png?raw=true "Title")
 
 - Different levels of serializability
-    - conflict serializability (most dbms try to supprt this) 
+    - conflict serializability (most dbms try to supprt this)
+        - Schedule S is conflict serializable if you can transform S into a serial schedule by swapping consecutive non-conflicting operations of different transactions
     - view serializability (no dbms can do this)
 
 - dependancy graph
@@ -49,23 +67,126 @@
     - also known as precedence graph
     - A schedule is conflict serializable iff its dependency graph is acyclic.
 
+    - ![Alt text](./dependency.png.png?raw=true "Title")
+
+    - view serializability: 
+    ![Alt text](./view.png?raw=true "Title")
 ### D (Durability)
 - ensures that the history of transaction will be maintained even incase of system failure.
+- changes of committed txn should be persistent.
+- no torn updates.
+- no changes from failed txns.
+- use logging or shadow paging.
 
-### Why acid transactions?
-- ensures data reliabbility and integrity
-- ensure data never falls into inconsistent state.
+## Two phase locking
 
-### Data Lakes
-- central location that holds large amount of data in native, raw format.
-- uses flat arhitecture and object storage to store data.
-- stores data with metadata tags and unique identifier which makes it easier to locate and retreive data across regions.
-- Data warehouse stores data in files and folder.
-- data available to use is faster as it is kept in raw state.
+- locks vs latches
+- ![Alt text](./lockVslatch.png?raw=true "Title")
 
-### Delta lake
-- brought ACID transactions to data lakes.
+- basic lock types
+    - S-Lock : shared locks for reads
+    - X-Lock : exclusive locks for writes
 
+### Executing with locks
+- trnsactions request locks
+- lock manager grants or blocks request
+- transactions release locks
+- lock manager updates its internal lock-table
+    - keeps tracks of txn that holds locks and txns that are waiting for lock.
+    - ![Alt text](./locks.png.png?raw=true "Title")
+    - lock does not prevent cycles in dependency graphs need something better.
+
+### Two-phase locking Mechanism
+- it determines whether a txn can accessan object in the database on the fly.
+- does not need to know all about txn ahead of time.
+- Phase 1 : Growing
+    - txn request lock from manager.
+    - manager grants or denies request.
+- Phase 2 : Shrinking
+    - txn is only allowed to release previously acquired locks. It cannot acquire new locks.
+- ![Alt text](./2pl.png?raw=true "Title")
+- sufficient to guarantee conflict serializibility
+    - precedence graph is acyclic
+- subject to cascading aborts.
+
+### Strong strict 2 phase locking (solution to dirty reads)
+- txn is allowed to release the lock after it has ended.
+- a schedule is strict if the value written by txn is not read or overwritten by other txn until that txn finishes.
+- Advantages
+    - does not incur cascading abort
+    - aborted txn can be undone by just restoring original values of modified tuples.
+
+### Deadlock prevention
+- cycle of txn waiting for locks to be released by each other.
+- 2 ways of dealing with deadlock
+    - deadlock detection 
+    - deadlock prevention
+
+### deadlock detections
+- DBMS creates wait-for graph to keep track of what lock each txn is waiting to acquire.
+    - nodes are txns
+    - edge from Ti to Tj if Ti is waiting for Tj to release the lock.
+- when dbms detects a deadlock it will select a victim txn that will either restart or abort dependin on how it was envoked.
+- selecting a proper victim depends on different variables
+    - age (lowest timestamp)
+    - progress (least/most queries executed)
+    - by the # of items already locked
+    - by the # of txns that we have to rollback with it.
+- Deadlock handling : Rollback length
+    - Completely
+    - Minimally
+- deadlock prevention
+    - DBMS kills one of txn to prevent deadlock.
+    - assign priorities based on timestamp. Older timestamp = higher timestamp
+- Intention lock
+    - allows higher-level node to be locked in shared or exclusive mode without having to check all descendant nodes.
+    - Intention shared (IS) - indicates explicit locking at lower level with shared locks.
+    - Intention-exclusive (IX) - indicates explicit locking at lower lvel with exclusive locks
+    - Shared+Intention-Exclusive (SIX) - The subtree rooted by that node is locked explicitly in shared mode and explicit locking is being done at a lower level with exclusive-mode locks.
+- Lock escalation
+    - dynamically ask for coarser-grained lock when too many low-level locks required. This reduces number of requests that the lock manager must process.
+
+## Timstamp ordering
+- Use timestamp to determine the serializability order of txns.
+- each txn is assigned unique fixed timestamp that is increasing.
+- multiple implementation statergies
+    - system clock
+    - logical counter
+    - hybrid
+
+### Basic timestamp ordering protocol
+- Txns read and write objects without locks
+- object is tagged with timestamp of last txn that successfully did read/write.
+    - W-TS(X) - write timestamp on X.
+    - R-TS(X) - Read timestamp on X.
+
+#### T/O - Reads
+- if TS(Ti) < W-TS(X) this violates timestamp order of Ti with regard to writer of X.
+    - abort Ti restart with new timestamp.
+- Else
+    - allow Ti to read X
+    - update R-TS(X) to max (R-TS(X), TS(X))
+    - Make a local copy of X to ensure repeatable reads for Ti.
+
+#### T/O - Writes
+if TS(Ti) < R-TS(X) or TS(Ti) < W-TS(X)
+    - abort and restart Ti
+- else
+    - Allow Ti to write X and update W-TS(X)
+    - Also make a local copy of X to ensure repeatable reads.
+
+### Thomas write rule
+- ![Alt text](./thomas.png?raw=true "Title")
+
+- Generates a schedule that is conflict serializable if you do not use the Thomas Write Rule
+
+### Recoverable Schedules
+- A schedule is recoverable if txns commit only after all txns whose changes they read, commit.
+
+#### Optimistic concurrency control
+    - Read Phase : track read/write sets of txns and store their writes in a private workspace
+    - validation phase : when a txn commits, check whether it conflicts with other txns
+    - write phase : if validation succeeds, aplpy private changes to database, Otherwise abort and restart the txn.
 
 ## Logging
 
