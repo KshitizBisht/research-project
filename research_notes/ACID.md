@@ -183,10 +183,68 @@ if TS(Ti) < R-TS(X) or TS(Ti) < W-TS(X)
 ### Recoverable Schedules
 - A schedule is recoverable if txns commit only after all txns whose changes they read, commit.
 
-#### Optimistic concurrency control
+#### Optimistic concurrency control (Confused in forward and backward validation)
     - Read Phase : track read/write sets of txns and store their writes in a private workspace
+        - DBMS copies every tuple that the txn accesses from the shared database to its workspace.
+
     - validation phase : when a txn commits, check whether it conflicts with other txns
+        - DBMS needs to guarantee only serializable schedules are permitted.
+        - Two methods for this phase
+            - Backward validation   
+                - checks whether committing txns intersects its read/write sets with those of any txn that have already committed. 
+            - Forward validation
+                - checks whether the committing txns intersects its read and write sets with any active txns that have not yet commmitted.
+                - each txn's timestamp is assigned at the beginning of the validation phase.
+                -
+
+
     - write phase : if validation succeeds, aplpy private changes to database, Otherwise abort and restart the txn.
+## Multi-version concurrency control
+- DBMS maintains multiple version of single object. (Txn reads a newest version)
+
+### version storage
+- DBMS uses the tuples' pointer field to create a version chanin per logical tuple.
+    - allows DBMS to find version that is visible to particular txn at time.
+    - indexes always points to head of chain.
+- Approach 1 : append only storage
+    - new version are appended to the same table space
+- Approach 2 : time-travel storage
+    - old version are copied to separate table space
+- Approach 3 : Delta storage
+    - the original values of the modified attributes are copied into seperate delta record space.
+
+#### Append only storage
+    - all physical versions of a logical tuple are stored in the same table.
+    - on update append a new version of the tuple into an empty space in the table.
+![Alt text](./version.png?raw=true "Title")
+
+#### time-travel storage
+- on every update, copy the current version to the time-table. update pointers
+- overwrite master version in maintable and update pointers.
+
+#### Delta storage
+- on every update, copy only the values that were modified to the delta storage and overwrite master version
+- txns can recreate old version by applying the delta in reverse order
+
+(difference between delta storage and time travel storage)
+
+
+### Garbage Collection
+- Approach 1 : tuple level
+    - find old versions by examining tuples directly
+    - Background vacuuming : seperate thread(s) periodically scan the table and look for the reclaimable versions.
+    - Cooperative cleaning : worker threads identify reclaimbale versions as they traverse version chain. Only works with O2N.
+
+- Approach 2 : transaction-level
+    - txns keep track of their old version so DBMS does not have to scan tuples to determine visibility.
+    -DBMS determinies when all versions creatred by a finished txn are no longer visible
+
+### Index management
+- primary key indexes point to version chain head.
+
+### MVCC indexes
+- (usually) do not store version information about tuples with their keys.
+![Alt text](./mvcc.png?raw=true "Title")
 
 ## Logging
 
