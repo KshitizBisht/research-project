@@ -78,6 +78,8 @@
 - no changes from failed txns.
 - use logging or shadow paging.
 
+![Alt text](./ccp.pnga?raw=true "Title")
+
 ## Two phase locking
 
 - locks vs latches
@@ -161,7 +163,7 @@
     - R-TS(X) - Read timestamp on X.
 
 #### T/O - Reads
-- if TS(Ti) < W-TS(X) this violates timestamp order of Ti with regard to writer of X.
+- if (when I am trying to read) TS(Ti) < W-TS(X) this violates timestamp order of Ti with regard to writer of X.
     - abort Ti restart with new timestamp.
 - Else
     - allow Ti to read X
@@ -169,7 +171,7 @@
     - Make a local copy of X to ensure repeatable reads for Ti.
 
 #### T/O - Writes
-if TS(Ti) < R-TS(X) or TS(Ti) < W-TS(X)
+if TS(Ti) < R-TS(X) or TS(Ti) < W-TS(X) (to write my timestamp Ti cannot be smaller than read or write timestamp)
     - abort and restart Ti
 - else
     - Allow Ti to write X and update W-TS(X)
@@ -195,7 +197,7 @@ if TS(Ti) < R-TS(X) or TS(Ti) < W-TS(X)
             - Forward validation
                 - checks whether the committing txns intersects its read and write sets with any active txns that have not yet commmitted.
                 - each txn's timestamp is assigned at the beginning of the validation phase.
-                -
+                -   
 
 
     - write phase : if validation succeeds, aplpy private changes to database, Otherwise abort and restart the txn.
