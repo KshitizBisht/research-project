@@ -2,6 +2,7 @@
 ## Motivation 
 - RCFile has limitations because it treas each column as a binary blob without semantics.
 - ORC uses and retains type information from the table definition.
+![Alt text](./OrcFileLayout.png?raw=true "Title")
 
 ## File tail
 - ORC stores top level indexes at the end of the file.
@@ -66,7 +67,7 @@ message Footer {
 ## Stripe information
 - body of the file is divided into stripes.
 - each stripe is self contained and may be read using only its own bytes combined with footer ans postscript.
-- each stripe contains only entire row so that rows never straddle stipe boundaries.
+- each stripe contains only entire row so that rows never straddle stripe boundaries.
 - stripes have three section : set of indexes for the rows within stipe, data itself and stripe footer.
 
 message StripeInformation {
@@ -159,3 +160,11 @@ message IntegerStatistics {
 - footer metadata includes version of the format, the schema, key-value paris, metadata for the columns in the file.
 - column metadata are type, path encoding, number of values.
 
+
+# WHY ORC SUPPORTS ACID TRANSACTIONS
+"Only ORC file format is supported in this first release.  The feature has been built such that transactions can be used by any storage format that can determine how updates or deletes apply to base records (basically, that has an explicit or implicit row id), but so far the integration work has only been done for ORC."
+
+
+
+either take hive and try to integrate parquet with it
+Or take hbase and try to integrate orc with it

@@ -26,3 +26,16 @@
 - complete videos 
 - read papers.
 
+### 14 October 2022
+
+#### Task given
+- Write behind log may not be applied in our case. (still read it)
+- Read the paper send by Dr. Nikos
+- Go in depth parquet and ORC.
+- How ORC can support transactions and why parquet cannot do it yet?
+- Hbase or parquet?
+- CAP theorem (consistency, availability partition tolerance) Hbase – CP Cassandra – AP
+- PACELC (read about this)  
+- Look for implementation of parquet and ORC.
+
+
