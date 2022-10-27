@@ -168,3 +168,12 @@ message IntegerStatistics {
 
 either take hive and try to integrate parquet with it
 Or take hbase and try to integrate orc with it
+
+# Reasons for ORC support
+- not designed to support OLTP transactions.
+- ORC is write once file format, so edits were implemented using base file and delta files where insert, update and delete operations are recorded. Minor and major compaction
+- ORC file extended with several column. 
+    - operations : insert, update, delete.
+    - tripe, for uniquely identifying row : originalTransaction, bucket, rowId
+    - current transaction
+- orc supports acid properties using base and delta files. For update delta file are created and once file is large enough it is rewritten to base.
