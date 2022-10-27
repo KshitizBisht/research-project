@@ -174,6 +174,21 @@ Or take hbase and try to integrate orc with it
 - ORC is write once file format, so edits were implemented using base file and delta files where insert, update and delete operations are recorded. Minor and major compaction
 - ORC file extended with several column. 
     - operations : insert, update, delete.
-    - tripe, for uniquely identifying row : originalTransaction, bucket, rowId
+    - triple, for uniquely identifying row : originalTransaction, bucket, rowId
     - current transaction
 - orc supports acid properties using base and delta files. For update delta file are created and once file is large enough it is rewritten to base.
+- original transaction ID ; write ID when the record is first created. For original file it is always 0.
+- BUcket ID : retrieved from original file name.
+- RowID : To calculate the row ID, the total row count of all the original files, which come before the current one in lexicographical order, is calculated. Then, the row ID is equal to the sum of the value calculated and local row ID in the current original file.
+
+000000_0            -> 	X1 Rows (returned by ORC footer field numberOfRows)
+
+000000_0_copy_1     -> 	X2 Rows (returned by ORC footer field numberOfRows)
+
+000000_0_copy_2     ->	[ Row 0 ]
+                        [ Row 1 ]
+                        [ Row 2 ]   <- Local Row ID (returned by filePosition in OrcRecordReader) = 2
+                                       Global Row ID = (X1+X2+2)
+                        [ Row 3 ]
+
+000000_0_copy_3     ->  X4 Rows
