@@ -188,7 +188,7 @@ Or take hbase and try to integrate orc with it
 000000_0_copy_2     ->	[ Row 0 ]
                         [ Row 1 ]
                         [ Row 2 ]   <- Local Row ID (returned by filePosition in OrcRecordReader) = 2
-                                       Global Row ID = (X1+X2+2)
+                                       \n Global Row ID = (X1+X2+2)
                         [ Row 3 ]
 
 000000_0_copy_3     ->  X4 Rows
